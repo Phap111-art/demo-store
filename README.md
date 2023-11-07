@@ -1,1 +1,1 @@
-# demo-store
+# demo-project-git

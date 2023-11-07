@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<table>
+    <h1>Page not found</h1>
+</table>
+<script>
+    // Gửi yêu cầu POST đến server để lấy token
+    $.ajax({
+        url: '/auth//login-jwt',
+        type: 'POST',
+        data: data,
+        success: function(response) {
+            if (response.status === 201) {
+                // Lưu token vào Local Storage
+                localStorage.setItem('jwtToken', response.data);
+                console.log('Token saved to Local Storage');
+            } else {
+                console.log('Error generating token:', response.message);
+            }
+        },
+        error: function(error) {
+            console.log('Error generating token:', error);
+        }
+    });
+</script>
+</body>
+</html>

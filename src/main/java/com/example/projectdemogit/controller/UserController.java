@@ -3,12 +3,11 @@ package com.example.projectdemogit.controller;
 import com.cloudinary.Cloudinary;
 import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
+import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.service.UserService;
 import com.example.projectdemogit.utils.CloudinaryUtil;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +40,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findByIdUser(id));
     }
     @GetMapping("/find-email/{email}")
-    public ResponseEntity<?> findByEmail(@PathVariable String email) {
+    public ResponseEntity<User> findByEmail(@PathVariable String email) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findByEmail(email).get());
     }
 

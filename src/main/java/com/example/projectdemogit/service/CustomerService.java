@@ -3,7 +3,6 @@ package com.example.projectdemogit.service;
 import com.example.projectdemogit.dtos.request.customer.CreateCustomerDTO;
 import com.example.projectdemogit.dtos.request.customer.UpdateCustomerDTO;
 import com.example.projectdemogit.dtos.response.CustomResponse;
-import org.springframework.validation.BindingResult;
 
 public interface CustomerService {
     CustomResponse getAllCustomers();

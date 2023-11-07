@@ -1,7 +1,7 @@
 package com.example.projectdemogit.service.impl;
 
-import com.example.projectdemogit.dtos.request.user.SendMailDto;
 import com.example.projectdemogit.dtos.request.user.ResetPasswordUser;
+import com.example.projectdemogit.dtos.request.user.SendMailDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.exception.CustomEmailException;
@@ -14,7 +14,6 @@ import com.example.projectdemogit.utils.ValidationUtils;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -77,7 +76,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             Optional<User> existingToken = userRepository.findByPasswordResetToken(token);
             if (!existingToken.isPresent()) {
-                throw new RuntimeException("Param token not found !");
+                throw new ValidationException("Param token not found !");
             }
             if (result.hasErrors()) {
                 throw new ValidationException(ValidationUtils.getValidationErrorString(result));

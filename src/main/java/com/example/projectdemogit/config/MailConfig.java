@@ -1,9 +1,5 @@
 package com.example.projectdemogit.config;
 
-import com.example.projectdemogit.entity.Role;
-import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +7,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
-import java.util.Set;
 
 @Configuration
 public class MailConfig {

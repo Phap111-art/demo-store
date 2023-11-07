@@ -5,7 +5,6 @@ import com.example.projectdemogit.dtos.request.customer.CreateCustomerDTO;
 import com.example.projectdemogit.dtos.request.customer.UpdateCustomerDTO;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.service.CustomerService;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,7 @@ public class CustomerController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> createCustomer(@RequestBody @Valid CreateCustomerDTO dto, BindingResult bindingResult) {
+    public ResponseEntity<CustomResponse> createCustomer(@RequestBody @Valid CreateCustomerDTO dto, BindingResult bindingResult) {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerService.createCustomer(dto));
     }
 

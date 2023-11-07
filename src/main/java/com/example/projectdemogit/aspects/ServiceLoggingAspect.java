@@ -1,6 +1,4 @@
-
 package com.example.projectdemogit.aspects;
-
 
 import com.example.projectdemogit.handlers.Oauth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,35 +23,43 @@ public class ServiceLoggingAspect {
 
     @Around("serviceMethods()")
     public Object logAroundServiceMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getResponse();
-        log.info("Request URL: " + request.getRequestURL());
-        log.info("Request Method: " + request.getMethod());
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = null;
+        HttpServletResponse response = null;
 
-        if (joinPoint.getArgs().length > 0) {
-            log.info("Call Around Before method: " + joinPoint.getArgs()[0]);
+        if (requestAttributes != null) {
+            request = requestAttributes.getRequest();
+            response = requestAttributes.getResponse();
+        }
+
+        if (request != null) {
+            log.info("Request URL: {}", request.getRequestURL());
+            log.info("Request Method: {}", request.getMethod());
+
+            if (joinPoint.getArgs().length > 0) {
+                log.info("Call Around Before method: {}", joinPoint.getArgs()[0]);
+            }
         }
 
         Object result = joinPoint.proceed();
 
-        if (isOAuth2Authentication(request) || isJwtAuthentication(request)) {
-            log.info("Response Status: " + response.getStatus());
-            log.info("Response Body: " + result.toString());
+        if (response != null && (isOAuth2Authentication() || isJwtAuthentication(request))) {
+            log.info("Response Status: {}", response.getStatus());
+            log.info("Response Body: {}", result.toString());
         }
 
         return result;
     }
 
-    private boolean isOAuth2Authentication(HttpServletRequest request) {
+    private boolean isOAuth2Authentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getDetails() instanceof Oauth2LoginSuccessHandler;
     }
 
     private boolean isJwtAuthentication(HttpServletRequest request) {
-        // Kiểm tra header hoặc parameter có chứa JWT token
+        // Check if the header or parameter contains a JWT token
         String authorizationHeader = request.getHeader("Authorization");
         String jwtTokenParam = request.getParameter("jwtToken");
         return authorizationHeader != null && authorizationHeader.startsWith("Bearer ") || jwtTokenParam != null;
     }
-
 }

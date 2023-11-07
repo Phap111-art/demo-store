@@ -8,7 +8,6 @@ import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.Role;
 import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.exception.CustomAuthenticationException;
 import com.example.projectdemogit.exception.MultipartFileExample;
 import com.example.projectdemogit.exception.ValidationException;
 import com.example.projectdemogit.jwt.JwtTokenProvider;
@@ -19,7 +18,6 @@ import com.example.projectdemogit.service.RoleService;
 import com.example.projectdemogit.service.UserService;
 import com.example.projectdemogit.utils.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -58,10 +56,7 @@ public class UserServiceImpl implements UserService {
             if (userRepository.existsByEmail(dto.getEmail())) {
                 throw new ValidationException("Email already exists!");
             }
-//            if (result.hasErrors()) {
-//                throw new ValidationException(ValidationUtils.getValidationErrorString(result));
-//            }
-            if (file.isEmpty() || file == null) {
+            if (file == null) {
                 throw new MultipartFileExample("File cannot be null");
             }
             /*upload to cloudinary */

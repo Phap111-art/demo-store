@@ -7,6 +7,7 @@ import com.example.projectdemogit.service.UserService;
 import com.example.projectdemogit.utils.CloudinaryUtil;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,17 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
     @Value("${cloudinary.folder_avatar}")
     private String folder ;
     private final Cloudinary cloudinary;
     private final UserService userService;
-
-    @Autowired
-    public UserController(Cloudinary cloudinary, UserService userService) {
-        this.cloudinary = cloudinary;
-        this.userService = userService;
-    }
 
 
     @PostMapping("/create-user")

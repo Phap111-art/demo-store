@@ -8,6 +8,7 @@ import com.example.projectdemogit.service.EmailService;
 import com.example.projectdemogit.utils.URLUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +17,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/forgot")
+@RequiredArgsConstructor
 public class EmailController {
 
     private final EmailService emailService;
-
-    public EmailController(EmailService emailService) {
-        this.emailService = emailService;
-    }
 
     @PostMapping("/send-mail")
     public ResponseEntity<CustomResponse> sendMail(@RequestBody @Valid SendMailDto dto, BindingResult result, HttpServletRequest request) {

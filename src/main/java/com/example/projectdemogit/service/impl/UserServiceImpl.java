@@ -13,27 +13,32 @@ import com.example.projectdemogit.exception.MultipartFileExample;
 import com.example.projectdemogit.exception.ValidationException;
 import com.example.projectdemogit.jwt.JwtTokenProvider;
 import com.example.projectdemogit.mapper.DataMapper;
+import com.example.projectdemogit.oauth2.CustomOidcUser;
 import com.example.projectdemogit.repository.UserRepository;
 import com.example.projectdemogit.service.RoleService;
 import com.example.projectdemogit.service.UserService;
-import com.example.projectdemogit.utils.ConvertStringToUUID;
-import com.example.projectdemogit.utils.CloudinaryUtil;
-import com.example.projectdemogit.utils.JsonUtil;
-import com.example.projectdemogit.utils.ValidationUtils;
+import com.example.projectdemogit.utils.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @Value("${cloudinary.folder_avatar}")
@@ -45,20 +50,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleService roleService;
 
-    @Autowired
-    public UserServiceImpl(Cloudinary cloudinary, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, UserRepository userRepository, RoleService roleService) {
-        this.cloudinary = cloudinary;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.roleService = roleService;
-    }
-
     @Override
     public CustomResponse createUser(String jsonUser, MultipartFile file) {
 
         try {
-            CreateUserDto dto = JsonUtil.convertJsonToObject(jsonUser,CreateUserDto.class);
+            CreateUserDto dto = JsonUtil.convertJsonToObject(jsonUser, CreateUserDto.class);
             if (userRepository.existsByEmail(dto.getEmail())) {
                 throw new ValidationException("Email already exists!");
             }
@@ -69,7 +65,7 @@ public class UserServiceImpl implements UserService {
                 throw new MultipartFileExample("File cannot be null");
             }
             /*upload to cloudinary */
-            String avatar =  CloudinaryUtil.uploadFileToCloudinary(cloudinary,file,cloudinaryFolderProduct);
+            String avatar = CloudinaryUtil.uploadFileToCloudinary(cloudinary, file, cloudinaryFolderProduct);
             /*mapper*/
             User entity = DataMapper.toEntity(dto, User.class);
             /*set BCrypt */
@@ -112,16 +108,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CustomResponse validateUserAndGenerateToken(LoginUserDto dto, BindingResult result, CustomUserDetails customUserDetails) {
+    public CustomResponse validateUserAndGenerateToken(LoginUserDto dto, BindingResult result,UserDetailsService detailsService) {
         try {
+            CustomUserDetails userDetails = (CustomUserDetails) detailsService.loadUserByUsername(dto.getUsername());
+            if (!passwordEncoder.matches(dto.getPassword(), userDetails.getPassword())) {
+                throw new BadCredentialsException("Invalid username or password");
+            }
             if (result.hasErrors()) {
                 throw new ValidationException(ValidationUtils.getValidationErrorString(result));
             }
-            if (customUserDetails == null) {
-                throw new CustomAuthenticationException("Invalid credentials");
-            }
             // create JWT
-            String token = jwtTokenProvider.generateToken(customUserDetails);
+            String token = jwtTokenProvider.generateToken(userDetails);
             return new CustomResponse("User Login successfully!", HttpStatus.CREATED.value(), token);
         } catch (RuntimeException e) {
             return new CustomResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), new LoginUserDto());
@@ -162,6 +159,25 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public CustomResponse getUserInfoAfterAuthentication(Authentication authentication, CustomOidcUser customOidcUser) {
+        /*get info Oauth2*/
+        if (authentication instanceof OAuth2AuthenticationToken && customOidcUser != null) {
+            String email = customOidcUser.getEmail();
+            String role = customOidcUser.getAuthorities().iterator().next().getAuthority();
+            return new CustomResponse("Login with google Successfully",
+                    HttpStatus.OK.value(), "email : " + email + " - role :" + role);
+        }
+        /*get info User*/
+        if (authentication != null && authentication.isAuthenticated()) {
+            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+            String username = authentication.getName(); // Lấy tên người dùng từ xác thực
+            List<String> roles = AuthenticationUtils.getRoles(customUserDetails);
+            return new CustomResponse("Login ok Successfully", HttpStatus.OK.value(), "username : " + username + " - " + roles);
+        }
+        return new CustomResponse("UNAUTHORIZED", HttpStatus.UNAUTHORIZED.value(), null);
     }
 
     @Override

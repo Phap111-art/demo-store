@@ -13,6 +13,7 @@ import com.example.projectdemogit.utils.URLUtil;
 import com.example.projectdemogit.utils.ValidationUtils;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,18 +25,12 @@ import org.springframework.validation.BindingResult;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender javaMailSender;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    public EmailServiceImpl(JavaMailSender javaMailSender, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.javaMailSender = javaMailSender;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     public CustomResponse sendMail(SendMailDto dto, BindingResult result, HttpServletRequest request) {

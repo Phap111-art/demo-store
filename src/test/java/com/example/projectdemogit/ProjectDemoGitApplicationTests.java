@@ -1,16 +1,11 @@
 package com.example.projectdemogit;
 
-import com.cloudinary.Cloudinary;
 import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.exception.CustomCloudinaryException;
 import com.example.projectdemogit.repository.UserRepository;
-import com.example.projectdemogit.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.io.IOException;
 import java.util.Optional;
 
 @SpringBootTest

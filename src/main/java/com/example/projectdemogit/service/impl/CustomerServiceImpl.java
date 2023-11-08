@@ -2,20 +2,16 @@ package com.example.projectdemogit.service.impl;
 
 import com.example.projectdemogit.dtos.request.customer.CreateCustomerDTO;
 import com.example.projectdemogit.dtos.request.customer.UpdateCustomerDTO;
+import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.Customer;
-import com.example.projectdemogit.exception.ValidationException;
+import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.mapper.DataMapper;
 import com.example.projectdemogit.repository.CustomerRepository;
-import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.service.CustomerService;
 import com.example.projectdemogit.utils.ConvertStringToUUID;
-import com.example.projectdemogit.utils.ValidationUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +24,16 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomResponse getAllCustomers() {
-        List<Customer> customers = customerRepository.findAll();
-        CustomResponse responseObject = new CustomResponse("get all customer successfully !", HttpStatus.OK.value(), customers);
-        return responseObject;
+        try {
+            List<Customer> customers = customerRepository.findAll();
+            if (customers.isEmpty()) {
+                throw new CustomException("data customer is null in db !", HttpStatus.NOT_FOUND);
+            }
+            return new CustomResponse("get all customer successfully !", HttpStatus.OK.value(), customers);
+
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), customerRepository.findAll());
+        }
     }
 
     @Override
@@ -49,15 +52,9 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomResponse createCustomer(CreateCustomerDTO dto ) {
+    public CustomResponse createCustomer(CreateCustomerDTO dto) {
 
         try {
-            if (isNameNumeric(dto)) {
-                throw new IllegalArgumentException("Name must be a string, not a number.");
-            }
-            if (dto == null) {
-                throw new RuntimeException("DTO cannot be null.");
-            }
             Customer customerEntity = DataMapper.toEntity(dto, Customer.class);
             Customer savedCustomer = customerRepository.save(customerEntity);
 
@@ -67,7 +64,6 @@ public class CustomerServiceImpl implements CustomerService {
             return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), new CreateCustomerDTO());
         }
     }
-
     private boolean isNameNumeric(CreateCustomerDTO dto) {
         String name = dto.getName();
         try {
@@ -77,7 +73,6 @@ public class CustomerServiceImpl implements CustomerService {
             return false; // Nếu name không phải là số, trả về false
         }
     }
-
     @Override
     public CustomResponse updateCustomer(String id, UpdateCustomerDTO dto) {
         try {
@@ -95,7 +90,6 @@ public class CustomerServiceImpl implements CustomerService {
             return new CustomResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), new UpdateCustomerDTO());
         }
     }
-    //TODO : change id = string , convert string to UUID
 
     @Override
     public CustomResponse deleteCustomer(String id) {

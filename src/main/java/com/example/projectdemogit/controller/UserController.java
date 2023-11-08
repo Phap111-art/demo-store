@@ -3,7 +3,6 @@ package com.example.projectdemogit.controller;
 import com.cloudinary.Cloudinary;
 import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
-import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.service.UserService;
 import com.example.projectdemogit.utils.CloudinaryUtil;
 import jakarta.validation.Valid;
@@ -40,8 +39,8 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findByIdUser(id));
     }
     @GetMapping("/find-email/{email}")
-    public ResponseEntity<User> findByEmail(@PathVariable String email) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.findByEmail(email).get());
+    public ResponseEntity<CustomResponse> findByEmail(@PathVariable String email) {
+        return ResponseEntity.status(HttpStatus.OK).body(new CustomResponse("find email successfully!", HttpStatus.OK.value(),userService.findByEmail(email).get()) );
     }
 
     @DeleteMapping("/delete/{id}")
@@ -50,7 +49,7 @@ public class UserController {
     }
 
     @GetMapping("/avatar/{publicId}")
-    public ResponseEntity<?> getImageCloudinary(@PathVariable("publicId") String publicId)  {
+    public ResponseEntity<byte[]> getImageCloudinary(@PathVariable("publicId") String publicId)  {
        return CloudinaryUtil.getImageFromCloudinary(folder,publicId,cloudinary);
     }
 }

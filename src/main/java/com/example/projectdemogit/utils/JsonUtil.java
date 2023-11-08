@@ -1,6 +1,8 @@
 package com.example.projectdemogit.utils;
 
+import com.example.projectdemogit.exception.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
 
 public class JsonUtil {
     public static <T> T convertJsonToObject(String json, Class<T> objectClass) {
@@ -16,7 +18,7 @@ public class JsonUtil {
         try {
             return new ObjectMapper().writeValueAsString(obj);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CustomException(e.getMessage() , HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

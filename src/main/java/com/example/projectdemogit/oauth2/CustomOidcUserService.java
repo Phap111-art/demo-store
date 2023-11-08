@@ -31,10 +31,11 @@ public class CustomOidcUserService extends OidcUserService {
         OidcUser oidcUser = super.loadUser(userRequest);
         String email = oidcUser.getEmail();
         Optional<User> userOptional = userRepository.findByEmail(email);
-        List<GrantedAuthority> authorities = userOptional.map(user -> user.getRoles().stream()
+
+        List<GrantedAuthority> authorities = userOptional.map(user -> user.getRoles().stream()/*update*/
                 .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList()))
-                .orElseGet(() -> {
+                .orElseGet(() -> { // create
                     Role role = Role.builder().roleId(2).name("USER").build();
                     User user = User.builder().email(email)
                             .password("").isActive(true)

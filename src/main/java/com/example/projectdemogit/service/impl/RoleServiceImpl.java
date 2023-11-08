@@ -1,14 +1,13 @@
 package com.example.projectdemogit.service.impl;
 
 import com.example.projectdemogit.entity.Role;
+import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.repository.RoleRepository;
 import com.example.projectdemogit.service.RoleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,7 @@ public class RoleServiceImpl implements RoleService {
 
     public Set<Role> getRolesByRoleIds(Set<Integer> roleIds) {
         return roleIds.stream().map(id -> roleRepository.findById(id).orElseGet(() -> {
-            throw new RuntimeException("id " + id + " not found in data");
+            throw new CustomException("id " + id + " not found in data", HttpStatus.NOT_FOUND);
         })).collect(Collectors.toSet());
     }
 }

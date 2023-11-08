@@ -1,14 +1,10 @@
 package com.example.projectdemogit.config;
 
 import com.example.projectdemogit.auth.CustomUserDetailsService;
-import com.example.projectdemogit.entity.Role;
-import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.handlers.CustomAccessDeniedHandler;
 import com.example.projectdemogit.handlers.JwtSessionStorageLogoutHandler;
 import com.example.projectdemogit.jwt.JwtAuthenticationFilter;
 import com.example.projectdemogit.oauth2.CustomOidcUserService;
-import com.example.projectdemogit.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,8 +22,6 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import java.util.Set;
 
 @EnableWebSecurity
 @Configuration
@@ -111,6 +105,7 @@ public class WebSecurityConfig {
                         .userInfoEndpoint(info -> info
                                 .oidcUserService(oidcUserService())
                         )
+
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

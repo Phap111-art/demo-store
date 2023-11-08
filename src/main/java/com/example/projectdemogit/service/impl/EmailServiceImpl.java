@@ -4,11 +4,11 @@ import com.example.projectdemogit.dtos.request.user.ResetPasswordUser;
 import com.example.projectdemogit.dtos.request.user.SendMailDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.exception.CustomEmailException;
-import com.example.projectdemogit.exception.ValidationException;
+import com.example.projectdemogit.exception.CustomException;
+import com.example.projectdemogit.exception.SendMailException;
+import com.example.projectdemogit.exception.ValidFiledException;
 import com.example.projectdemogit.repository.UserRepository;
 import com.example.projectdemogit.service.EmailService;
-import com.example.projectdemogit.utils.RandomToken;
 import com.example.projectdemogit.utils.URLUtil;
 import com.example.projectdemogit.utils.ValidationUtils;
 import jakarta.mail.internet.MimeMessage;
@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.thymeleaf.util.StringUtils;
 
 import java.util.Optional;
 
@@ -39,13 +40,13 @@ public class EmailServiceImpl implements EmailService {
 
             Optional<User> existingEmail = userRepository.findByEmail(dto.getEmail());
             if (result.hasErrors()) {
-                throw new ValidationException(ValidationUtils.getValidationErrorString(result));
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (!existingEmail.isPresent()) {
-                throw new CustomEmailException("Your email " + dto.getEmail() + " not found !");
+                throw new SendMailException("Your email " + dto.getEmail() + " not found !");
             }
             /*save token random */
-            String createToken = RandomToken.get();
+            String createToken = StringUtils.randomAlphanumeric(45);
             existingEmail.get().setPasswordResetToken(createToken);
             userRepository.save(existingEmail.get());
             /*create localhost*/
@@ -66,7 +67,7 @@ public class EmailServiceImpl implements EmailService {
             javaMailSender.send(message);
             return new CustomResponse("Send Mail Successfully!", HttpStatus.OK.value(), "");
         } catch (Exception e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), "");
+            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), "");
         }
 
     }
@@ -76,16 +77,16 @@ public class EmailServiceImpl implements EmailService {
         try {
             Optional<User> existingToken = userRepository.findByPasswordResetToken(token);
             if (!existingToken.isPresent()) {
-                throw new ValidationException("Param token not found !");
+                throw new ValidFiledException("Param token not found !",HttpStatus.NOT_FOUND);
             }
             if (result.hasErrors()) {
-                throw new ValidationException(ValidationUtils.getValidationErrorString(result));
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result),HttpStatus.BAD_REQUEST);
             }
             existingToken.get().setPassword(passwordEncoder.encode(dto.getPassword()));
             existingToken.get().setPasswordResetToken(null);
             return new CustomResponse("Reset Password successfully!", HttpStatus.OK.value(), userRepository.save(existingToken.get()));
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), "");
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), "");
 
         }
     }

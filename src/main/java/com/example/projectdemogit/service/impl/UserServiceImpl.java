@@ -8,8 +8,10 @@ import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.Role;
 import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.exception.MultipartFileExample;
-import com.example.projectdemogit.exception.ValidationException;
+import com.example.projectdemogit.exception.CustomException;
+import com.example.projectdemogit.exception.InvalidException;
+import com.example.projectdemogit.exception.MultipartFileException;
+import com.example.projectdemogit.exception.ValidFiledException;
 import com.example.projectdemogit.jwt.JwtTokenProvider;
 import com.example.projectdemogit.mapper.DataMapper;
 import com.example.projectdemogit.oauth2.CustomOidcUser;
@@ -20,7 +22,6 @@ import com.example.projectdemogit.utils.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -54,10 +55,10 @@ public class UserServiceImpl implements UserService {
         try {
             CreateUserDto dto = JsonUtil.convertJsonToObject(jsonUser, CreateUserDto.class);
             if (userRepository.existsByEmail(dto.getEmail())) {
-                throw new ValidationException("Email already exists!");
+                throw new ValidFiledException("Email already exists!" ,HttpStatus.CONFLICT);
             }
             if (file == null) {
-                throw new MultipartFileExample("File cannot be null");
+                throw new MultipartFileException("File cannot be null",HttpStatus.BAD_REQUEST);
             }
             /*upload to cloudinary */
             String avatar = CloudinaryUtil.uploadFileToCloudinary(cloudinary, file, cloudinaryFolderProduct);
@@ -71,8 +72,8 @@ public class UserServiceImpl implements UserService {
             /*save User */
             User savedUser = userRepository.save(entity);
             return new CustomResponse("User created successfully!", HttpStatus.CREATED.value(), savedUser);
-        } catch (Exception e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), new CreateUserDto());
+        } catch (MultipartFileException e) {
+            return new CustomResponse(e.getMessage(),e.getHttpStatus().value(), new CreateUserDto());
         }
     }
 
@@ -82,7 +83,7 @@ public class UserServiceImpl implements UserService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<User> existingUser = userRepository.findById(uuid);
             if (result.hasErrors()) {
-                throw new ValidationException(ValidationUtils.getValidationErrorString(result));
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result),HttpStatus.BAD_REQUEST);
             }
             if (!existingUser.isPresent()) {
                 throw new IllegalArgumentException("Update failed! User not found: " + id);
@@ -97,8 +98,8 @@ public class UserServiceImpl implements UserService {
             /*update user*/
             User updatedUser = userRepository.save(entity);
             return new CustomResponse("User updated successfully!", HttpStatus.OK.value(), updatedUser);
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), new UpdateUserDto());
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), new UpdateUserDto());
         }
     }
 
@@ -107,16 +108,16 @@ public class UserServiceImpl implements UserService {
         try {
             CustomUserDetails userDetails = (CustomUserDetails) detailsService.loadUserByUsername(dto.getUsername());
             if (!passwordEncoder.matches(dto.getPassword(), userDetails.getPassword())) {
-                throw new BadCredentialsException("Invalid username or password");
+                throw new InvalidException("Invalid username or password", HttpStatus.UNAUTHORIZED);
             }
             if (result.hasErrors()) {
-                throw new ValidationException(ValidationUtils.getValidationErrorString(result));
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result) , HttpStatus.BAD_REQUEST);
             }
             // create JWT
             String token = jwtTokenProvider.generateToken(userDetails);
             return new CustomResponse("User Login successfully!", HttpStatus.CREATED.value(), token);
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), new LoginUserDto());
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), new LoginUserDto());
         }
     }
 

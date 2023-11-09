@@ -3,7 +3,6 @@ package com.example.projectdemogit.test.controller;
 import com.example.projectdemogit.dtos.request.user.CreateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.service.UserService;
-import com.example.projectdemogit.utils.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;

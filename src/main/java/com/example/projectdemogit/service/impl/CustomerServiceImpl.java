@@ -64,15 +64,6 @@ public class CustomerServiceImpl implements CustomerService {
             return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), new CreateCustomerDTO());
         }
     }
-    private boolean isNameNumeric(CreateCustomerDTO dto) {
-        String name = dto.getName();
-        try {
-            Double.parseDouble(name);
-            return true; // Nếu name là số, trả về true
-        } catch (NumberFormatException e) {
-            return false; // Nếu name không phải là số, trả về false
-        }
-    }
     @Override
     public CustomResponse updateCustomer(String id, UpdateCustomerDTO dto) {
         try {

@@ -18,7 +18,10 @@ import com.example.projectdemogit.oauth2.CustomOidcUser;
 import com.example.projectdemogit.repository.UserRepository;
 import com.example.projectdemogit.service.RoleService;
 import com.example.projectdemogit.service.UserService;
-import com.example.projectdemogit.utils.*;
+import com.example.projectdemogit.utils.AuthenticationUtils;
+import com.example.projectdemogit.utils.CloudinaryUtil;
+import com.example.projectdemogit.utils.ConvertStringToUUID;
+import com.example.projectdemogit.utils.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -42,38 +45,34 @@ public class UserServiceImpl implements UserService {
 
     @Value("${cloudinary.folder_avatar}")
     private String cloudinaryFolderProduct;
-
     private final Cloudinary cloudinary;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RoleService roleService;
 
+
     @Override
-    public CustomResponse createUser(String jsonUser, MultipartFile file) {
+    public CustomResponse createUser(CreateUserDto dto, BindingResult result) {
 
         try {
-            CreateUserDto dto = JsonUtil.convertJsonToObject(jsonUser, CreateUserDto.class);
+            if (result.hasErrors()) {
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
+            }
             if (userRepository.existsByEmail(dto.getEmail())) {
-                throw new ValidFiledException("Email already exists!" ,HttpStatus.CONFLICT);
+                throw new ValidFiledException("Email already exists!", HttpStatus.CONFLICT);
             }
-            if (file == null) {
-                throw new MultipartFileException("File cannot be null",HttpStatus.BAD_REQUEST);
-            }
-            /*upload to cloudinary */
-            String avatar = CloudinaryUtil.uploadFileToCloudinary(cloudinary, file, cloudinaryFolderProduct);
             /*mapper*/
             User entity = DataMapper.toEntity(dto, User.class);
             /*set BCrypt */
             entity.setPassword(passwordEncoder.encode(dto.getPassword()));
             /*set Role  */
             entity.setRoles(roleService.getRolesByRoleIds(dto.getRoleId()));
-            entity.setAvatar(avatar);
             /*save User */
             User savedUser = userRepository.save(entity);
             return new CustomResponse("User created successfully!", HttpStatus.CREATED.value(), savedUser);
-        } catch (MultipartFileException e) {
-            return new CustomResponse(e.getMessage(),e.getHttpStatus().value(), new CreateUserDto());
+        } catch (Exception e) {
+            return new CustomResponse(e.getMessage(), 500, new CreateUserDto());
         }
     }
 
@@ -83,10 +82,10 @@ public class UserServiceImpl implements UserService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<User> existingUser = userRepository.findById(uuid);
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result),HttpStatus.BAD_REQUEST);
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (!existingUser.isPresent()) {
-                throw new IllegalArgumentException("Update failed! User not found: " + id);
+                throw new CustomException("Update failed! User not found: " + id , HttpStatus.NOT_FOUND);
             }
             if (!dto.getPassword().startsWith("$2a$")) {
                 dto.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -104,14 +103,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CustomResponse validateUserAndGenerateToken(LoginUserDto dto, BindingResult result,UserDetailsService detailsService) {
+    public CustomResponse validateUserAndGenerateToken(LoginUserDto dto, BindingResult result, UserDetailsService detailsService) {
         try {
             CustomUserDetails userDetails = (CustomUserDetails) detailsService.loadUserByUsername(dto.getUsername());
             if (!passwordEncoder.matches(dto.getPassword(), userDetails.getPassword())) {
                 throw new InvalidException("Invalid username or password", HttpStatus.UNAUTHORIZED);
             }
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result) , HttpStatus.BAD_REQUEST);
+                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             // create JWT
             String token = jwtTokenProvider.generateToken(userDetails);
@@ -178,7 +177,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createNewOrUpdateUserOAuth2(String email) {
-        Optional<User> existingUser = findByEmail(email);
+        Optional<User> existingUser = userRepository.findByEmail(email);
         if (!existingUser.isPresent()) {
             Role role = Role.builder().roleId(2).build();
             userRepository.save(User.builder().email(email).isActive(true).roles(Set.of(role)).build());
@@ -188,7 +187,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public CustomResponse findByEmail(String email) {
+        try {
+            if (!userRepository.existsByEmail(email)) {
+                throw new ValidFiledException("Email not found in db!", HttpStatus.NOT_FOUND);
+            }
+            return new CustomResponse("find your email : " + email + " successfully!", HttpStatus.OK.value(), userRepository.findByEmail(email));
+        } catch (RuntimeException e) {
+            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        }
     }
+
+    @Override
+    public CustomResponse uploadAvatar(MultipartFile file, String id) {
+        try {
+            UUID uuid = ConvertStringToUUID.getUUID(id);
+            Optional<User> existingUser = userRepository.findById(uuid);
+            if (file == null) {
+                throw new MultipartFileException("File cannot be null", HttpStatus.BAD_REQUEST);
+            }
+            if (!existingUser.isPresent()) {
+                throw new CustomException("Update failed! User not found: " + id , HttpStatus.NOT_FOUND);
+            }
+            /*upload to cloudinary */
+            String avatar = CloudinaryUtil.uploadFileToCloudinary(cloudinary, file, cloudinaryFolderProduct);
+            /*set avatar*/
+            existingUser.get().setAvatar(avatar);
+            return new CustomResponse("Upload avatar successfully !", HttpStatus.OK.value(), userRepository.save(existingUser.get()));
+        } catch (MultipartFileException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), "");
+        }
+    }
+
 }

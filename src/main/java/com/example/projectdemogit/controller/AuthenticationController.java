@@ -2,7 +2,7 @@ package com.example.projectdemogit.controller;
 
 import com.example.projectdemogit.dtos.request.user.LoginUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
-import com.example.projectdemogit.oauth2.CustomOidcUser;
+import com.example.projectdemogit.auth.oauth2.CustomOidcUser;
 import com.example.projectdemogit.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,27 +33,22 @@ public class AuthenticationController {
         return ResponseEntity.ok(userService.validateUserAndGenerateToken(dto,result,detailsService));
     }
     @GetMapping("/admin")
-    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CustomResponse> admin() {
         return ResponseEntity.ok(new CustomResponse("Welcome come admin", HttpStatus.OK.value(), ""));
     }
     @GetMapping("/user")
-    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<CustomResponse> user() {
         return ResponseEntity.ok(new CustomResponse("Welcome come USER", HttpStatus.OK.value(), ""));
     }
     @GetMapping("/warehouse")
-    @PreAuthorize("hasAuthority('WAREHOUSE_MANAGER')")
     public ResponseEntity<CustomResponse> warehouse() {
         return ResponseEntity.ok(new CustomResponse("Welcome come WAREHOUSE_MANAGER", HttpStatus.OK.value(), ""));
     }
     @GetMapping("/seller")
-    @PreAuthorize("hasAuthority('SELLER')")
     public ResponseEntity<CustomResponse> seller() {
         return ResponseEntity.ok(new CustomResponse("Welcome come SELLER", HttpStatus.OK.value(), ""));
     }
     @GetMapping("/customer")
-    @PreAuthorize("hasAuthority('CUSTOMER_VIP')")
     public ResponseEntity<CustomResponse> customer() {
         return ResponseEntity.ok(new CustomResponse("Welcome come CUSTOMER_VIP", HttpStatus.OK.value(), ""));
     }

@@ -5,7 +5,7 @@ import com.example.projectdemogit.dtos.request.user.LoginUserDto;
 import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.User;
-import com.example.projectdemogit.oauth2.CustomOidcUser;
+import com.example.projectdemogit.auth.oauth2.CustomOidcUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
@@ -26,11 +26,9 @@ public interface UserService {
 
     CustomResponse findByEmail(String email);
 
-    Optional<User> findByUsername(String username);
+    CustomResponse findByUsername(String username);
 
     CustomResponse getUserInfoAfterAuthentication(Authentication authentication, CustomOidcUser customOidcUser);
-
-    void createNewOrUpdateUserOAuth2(String email);
 
     CustomResponse uploadAvatar(MultipartFile file ,String id);
 

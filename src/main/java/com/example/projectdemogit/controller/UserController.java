@@ -39,6 +39,10 @@ public class UserController {
     public ResponseEntity<CustomResponse> findByIdUser(@PathVariable String id) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findByIdUser(id));
     }
+    @GetMapping("/find-username/{username}")
+    public ResponseEntity<CustomResponse> findByUsername(@PathVariable String username) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findByUsername(username));
+    }
     @GetMapping("/find-email/{email}")
     public ResponseEntity<CustomResponse> findByEmail(@PathVariable String email) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findByEmail(email));

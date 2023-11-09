@@ -1,7 +1,8 @@
-package com.example.projectdemogit.oauth2;
+package com.example.projectdemogit.auth.oauth2;
 
 import com.example.projectdemogit.entity.Role;
 import com.example.projectdemogit.entity.User;
+import com.example.projectdemogit.enums.RoleType;
 import com.example.projectdemogit.repository.UserRepository;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class CustomOidcUserService extends OidcUserService {
                 .collect(Collectors.toList()))
                 .orElseGet(() -> {
         /*create*/
-                    Role role = Role.builder().roleId(2).name("USER").build();
+                    Role role = Role.builder().roleId(2).name(RoleType.USER.name()).build();
                     User user = User.builder().email(email)
                             .password("").isActive(true)
                             .roles(Set.of(role)).build();

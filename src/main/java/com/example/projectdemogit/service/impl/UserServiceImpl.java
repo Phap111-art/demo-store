@@ -1,7 +1,7 @@
 package com.example.projectdemogit.service.impl;
 
 import com.cloudinary.Cloudinary;
-import com.example.projectdemogit.auth.CustomUserDetails;
+import com.example.projectdemogit.auth.userdetails.CustomUserDetails;
 import com.example.projectdemogit.dtos.request.user.CreateUserDto;
 import com.example.projectdemogit.dtos.request.user.LoginUserDto;
 import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
@@ -12,9 +12,9 @@ import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.exception.InvalidException;
 import com.example.projectdemogit.exception.MultipartFileException;
 import com.example.projectdemogit.exception.ValidFiledException;
-import com.example.projectdemogit.jwt.JwtTokenProvider;
+import com.example.projectdemogit.auth.jwt.JwtTokenProvider;
 import com.example.projectdemogit.mapper.DataMapper;
-import com.example.projectdemogit.oauth2.CustomOidcUser;
+import com.example.projectdemogit.auth.oauth2.CustomOidcUser;
 import com.example.projectdemogit.repository.UserRepository;
 import com.example.projectdemogit.service.RoleService;
 import com.example.projectdemogit.service.UserService;
@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
                 throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (!existingUser.isPresent()) {
-                throw new CustomException("Update failed! User not found: " + id , HttpStatus.NOT_FOUND);
+                throw new CustomException("Update failed! User not found: " + id, HttpStatus.NOT_FOUND);
             }
             if (!dto.getPassword().startsWith("$2a$")) {
                 dto.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -142,18 +142,25 @@ public class UserServiceImpl implements UserService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<User> existingUser = userRepository.findById(uuid);
             if (existingUser.isPresent()) {
-                throw new IllegalArgumentException("Delete failed! User not found: " + id);
+                throw new CustomException("Delete failed! User not found: " + id, HttpStatus.NOT_FOUND);
             }
             userRepository.deleteById(uuid);
             return new CustomResponse("User deleted successfully!", HttpStatus.OK.value(), "");
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), null);
         }
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public CustomResponse findByUsername(String username) {
+        try {
+            if (!userRepository.existsByUsername(username)) {
+                throw new CustomException("username not found: " + username + " in db !", HttpStatus.NOT_FOUND);
+            }
+            return new CustomResponse("find username : " + username + " successfully!", HttpStatus.OK.value(), userRepository.findByUsername(username));
+        } catch (RuntimeException e) {
+            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        }
     }
 
     @Override
@@ -173,17 +180,6 @@ public class UserServiceImpl implements UserService {
             return new CustomResponse("Login ok Successfully", HttpStatus.OK.value(), "username : " + username + " - " + roles);
         }
         return new CustomResponse("UNAUTHORIZED", HttpStatus.UNAUTHORIZED.value(), null);
-    }
-
-    @Override
-    public void createNewOrUpdateUserOAuth2(String email) {
-        Optional<User> existingUser = userRepository.findByEmail(email);
-        if (!existingUser.isPresent()) {
-            Role role = Role.builder().roleId(2).build();
-            userRepository.save(User.builder().email(email).isActive(true).roles(Set.of(role)).build());
-        } else {
-            userRepository.save(existingUser.get());
-        }
     }
 
     @Override
@@ -207,7 +203,7 @@ public class UserServiceImpl implements UserService {
                 throw new MultipartFileException("File cannot be null", HttpStatus.BAD_REQUEST);
             }
             if (!existingUser.isPresent()) {
-                throw new CustomException("Update failed! User not found: " + id , HttpStatus.NOT_FOUND);
+                throw new CustomException("Update failed! User not found: " + id, HttpStatus.NOT_FOUND);
             }
             /*upload to cloudinary */
             String avatar = CloudinaryUtil.uploadFileToCloudinary(cloudinary, file, cloudinaryFolderProduct);

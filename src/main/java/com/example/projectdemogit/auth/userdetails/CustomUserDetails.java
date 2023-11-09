@@ -1,4 +1,4 @@
-package com.example.projectdemogit.auth;
+package com.example.projectdemogit.auth.userdetails;
 
 import com.example.projectdemogit.entity.Role;
 import com.example.projectdemogit.entity.User;

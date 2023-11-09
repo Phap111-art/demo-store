@@ -1,6 +1,6 @@
 package com.example.projectdemogit.enums;
 
-public enum Role {
+public enum RoleType {
     ADMIN,
     USER,
     SELLER,

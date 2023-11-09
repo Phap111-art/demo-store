@@ -2,7 +2,6 @@ package com.example.projectdemogit.service;
 
 import com.example.projectdemogit.entity.Role;
 
-import java.util.List;
 import java.util.Set;
 
 public interface RoleService {

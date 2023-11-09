@@ -1,4 +1,4 @@
-package com.example.projectdemogit.jwt;
+package com.example.projectdemogit.auth.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,4 +1,4 @@
-package com.example.projectdemogit.oauth2;
+package com.example.projectdemogit.auth.oauth2;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;

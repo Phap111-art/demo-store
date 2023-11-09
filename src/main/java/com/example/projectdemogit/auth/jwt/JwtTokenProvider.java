@@ -1,6 +1,6 @@
-package com.example.projectdemogit.jwt;
+package com.example.projectdemogit.auth.jwt;
 
-import com.example.projectdemogit.auth.CustomUserDetails;
+import com.example.projectdemogit.auth.userdetails.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.*;

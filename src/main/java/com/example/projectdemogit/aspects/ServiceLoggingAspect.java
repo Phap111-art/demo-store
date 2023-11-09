@@ -1,6 +1,5 @@
 package com.example.projectdemogit.aspects;
 
-import com.example.projectdemogit.handlers.Oauth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -53,7 +53,7 @@ public class ServiceLoggingAspect {
 
     private boolean isOAuth2Authentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.getDetails() instanceof Oauth2LoginSuccessHandler;
+        return authentication != null && authentication.getDetails() instanceof DefaultOAuth2User;
     }
 
     private boolean isJwtAuthentication(HttpServletRequest request) {

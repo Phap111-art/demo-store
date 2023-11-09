@@ -1,10 +1,12 @@
 package com.example.projectdemogit.config;
 
-import com.example.projectdemogit.auth.CustomUserDetailsService;
+import com.example.projectdemogit.auth.userdetails.CustomUserDetailsService;
+import com.example.projectdemogit.enums.RoleType;
 import com.example.projectdemogit.handlers.CustomAccessDeniedHandler;
 import com.example.projectdemogit.handlers.JwtSessionStorageLogoutHandler;
-import com.example.projectdemogit.jwt.JwtAuthenticationFilter;
-import com.example.projectdemogit.oauth2.CustomOidcUserService;
+import com.example.projectdemogit.auth.jwt.JwtAuthenticationFilter;
+import com.example.projectdemogit.auth.oauth2.CustomOidcUserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +28,14 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 @Configuration
 public class WebSecurityConfig {
+    @Value("${user_to_access_url}")
+    private String[] UserAccessUrls;
+    @Value("${authority_to_access_url}")
+    private String[] authorityToAccessUrls;
+    @Value("${default_success_url}")
+    private String successUrls;
 
+    private static final String LOGIN_JWT_URL = "/auth/login-jwt";
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -79,17 +88,16 @@ public class WebSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login-jwt", "/auth/create-user", "/forgot/**", "/oauth2/google/**").permitAll()
-                        .requestMatchers("/auth/user").hasAuthority("USER")
-                        .requestMatchers("/auth/admin").hasAuthority("ADMIN")
-                        .requestMatchers("/auth/warehouse").hasAuthority("WAREHOUSE_MANAGER")
-                        .requestMatchers("/auth/seller").hasAuthority("SELLER")
-                        .requestMatchers("/auth/customer").hasAuthority("CUSTOMER_VIP")
+                        .requestMatchers(UserAccessUrls[0], UserAccessUrls[1], UserAccessUrls[2], UserAccessUrls[3]).permitAll()
+                        .requestMatchers(authorityToAccessUrls[0]).hasAuthority(RoleType.USER.name())
+                        .requestMatchers(authorityToAccessUrls[1]).hasAuthority(RoleType.ADMIN.name())
+                        .requestMatchers(authorityToAccessUrls[2]).hasAuthority(RoleType.WAREHOUSE_MANAGER.name())
+                        .requestMatchers(authorityToAccessUrls[3]).hasAuthority(RoleType.SELLER.name())
+                        .requestMatchers(authorityToAccessUrls[4]).hasAuthority(RoleType.CUSTOMER_VIP.name())
                         .anyRequest().authenticated()
                 ).exceptionHandling(config -> config.accessDeniedHandler(accessDeniedHandler()))
                 .formLogin(formLogin -> formLogin
-                        .loginProcessingUrl("/auth/login")
-                        .defaultSuccessUrl("/auth/home")
+                        .defaultSuccessUrl(successUrls)
                 ).httpBasic(Customizer.withDefaults())
                 .logout(logout -> logout
                         .invalidateHttpSession(true)
@@ -101,7 +109,7 @@ public class WebSecurityConfig {
                         .permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/auth/home")
+                        .defaultSuccessUrl(successUrls)
                         .userInfoEndpoint(info -> info
                                 .oidcUserService(oidcUserService())
                         )

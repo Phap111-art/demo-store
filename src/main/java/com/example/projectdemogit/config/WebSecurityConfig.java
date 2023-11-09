@@ -30,8 +30,10 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class WebSecurityConfig {
     @Value("${user_to_access_url}")
     private String[] UserAccessUrls;
+
     @Value("${authority_to_access_url}")
     private String[] authorityToAccessUrls;
+
     @Value("${default_success_url}")
     private String successUrls;
 

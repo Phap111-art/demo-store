@@ -6,12 +6,10 @@ import com.example.projectdemogit.dtos.request.user.CreateUserDto;
 import com.example.projectdemogit.dtos.request.user.LoginUserDto;
 import com.example.projectdemogit.dtos.request.user.UpdateUserDto;
 import com.example.projectdemogit.dtos.response.CustomResponse;
-import com.example.projectdemogit.entity.Role;
 import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.exception.InvalidException;
 import com.example.projectdemogit.exception.MultipartFileException;
-import com.example.projectdemogit.exception.ValidFiledException;
 import com.example.projectdemogit.auth.jwt.JwtTokenProvider;
 import com.example.projectdemogit.mapper.DataMapper;
 import com.example.projectdemogit.auth.oauth2.CustomOidcUser;
@@ -35,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 
@@ -57,10 +54,10 @@ public class UserServiceImpl implements UserService {
 
         try {
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
+                throw new CustomException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (userRepository.existsByEmail(dto.getEmail())) {
-                throw new ValidFiledException("Email already exists!", HttpStatus.CONFLICT);
+                throw new CustomException("Email already exists!", HttpStatus.CONFLICT);
             }
             /*mapper*/
             User entity = DataMapper.toEntity(dto, User.class);
@@ -71,8 +68,8 @@ public class UserServiceImpl implements UserService {
             /*save User */
             User savedUser = userRepository.save(entity);
             return new CustomResponse("User created successfully!", HttpStatus.CREATED.value(), savedUser);
-        } catch (Exception e) {
-            return new CustomResponse(e.getMessage(), 500, new CreateUserDto());
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), new CreateUserDto());
         }
     }
 
@@ -82,7 +79,7 @@ public class UserServiceImpl implements UserService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<User> existingUser = userRepository.findById(uuid);
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
+                throw new CustomException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (!existingUser.isPresent()) {
                 throw new CustomException("Update failed! User not found: " + id, HttpStatus.NOT_FOUND);
@@ -110,7 +107,7 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidException("Invalid username or password", HttpStatus.UNAUTHORIZED);
             }
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
+                throw new CustomException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             // create JWT
             String token = jwtTokenProvider.generateToken(userDetails);
@@ -126,12 +123,12 @@ public class UserServiceImpl implements UserService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<User> user = userRepository.findById(uuid);
             if (!user.isPresent()) {
-                throw new IllegalArgumentException("User not found");
+                throw new CustomException("User not found" + id , HttpStatus.NOT_FOUND);
             }
             return new CustomResponse("User found", HttpStatus.OK.value(),
                     DataMapper.toDTO(user.get(), CreateUserDto.class));
-        } catch (Exception e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), null);
         }
     }
 
@@ -186,7 +183,7 @@ public class UserServiceImpl implements UserService {
     public CustomResponse findByEmail(String email) {
         try {
             if (!userRepository.existsByEmail(email)) {
-                throw new ValidFiledException("Email not found in db!", HttpStatus.NOT_FOUND);
+                throw new CustomException("Email not found in db!", HttpStatus.NOT_FOUND);
             }
             return new CustomResponse("find your email : " + email + " successfully!", HttpStatus.OK.value(), userRepository.findByEmail(email));
         } catch (RuntimeException e) {

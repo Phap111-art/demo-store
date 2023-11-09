@@ -6,7 +6,6 @@ import com.example.projectdemogit.dtos.response.CustomResponse;
 import com.example.projectdemogit.entity.User;
 import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.exception.SendMailException;
-import com.example.projectdemogit.exception.ValidFiledException;
 import com.example.projectdemogit.repository.UserRepository;
 import com.example.projectdemogit.service.EmailService;
 import com.example.projectdemogit.utils.URLUtil;

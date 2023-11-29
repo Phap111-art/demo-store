@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
     private User user;
-
+    
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<Role> roles = user.getRoles();

@@ -3,6 +3,7 @@ package com.example.projectdemogit.service.impl;
 import com.example.projectdemogit.dtos.request.customer.CreateCustomerDTO;
 import com.example.projectdemogit.dtos.request.customer.UpdateCustomerDTO;
 import com.example.projectdemogit.dtos.response.CustomResponse;
+import com.example.projectdemogit.dtos.response.customer.ViewCustomerDTO;
 import com.example.projectdemogit.entity.Customer;
 import com.example.projectdemogit.exception.CustomException;
 import com.example.projectdemogit.mapper.DataMapper;
@@ -26,10 +27,11 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomResponse getAllCustomers() {
         try {
             List<Customer> customers = customerRepository.findAll();
+            List<ViewCustomerDTO> viewDto = DataMapper.toDTOList(customers, ViewCustomerDTO.class);
             if (customers.isEmpty()) {
                 throw new CustomException("data customer is null in db !", HttpStatus.NOT_FOUND);
             }
-            return new CustomResponse("get all customer successfully !", HttpStatus.OK.value(), customers);
+            return new CustomResponse("get all customer successfully !", HttpStatus.OK.value(), viewDto);
 
         } catch (CustomException e) {
             return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), customerRepository.findAll());
@@ -41,13 +43,14 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<Customer> customer = customerRepository.findById(uuid);
+            ViewCustomerDTO viewCustomerDTO=DataMapper.toDTO(customer.get(),ViewCustomerDTO.class);
             if (customer.isPresent()) {
-                return new CustomResponse("Found Id " + id + " successfully", HttpStatus.OK.value(), customer.get());
+                return new CustomResponse("Found Id " + id + " successfully", HttpStatus.OK.value(), viewCustomerDTO);
             } else {
-                throw new IllegalArgumentException("Not found id customer: " + id);
+                throw new CustomException("Not found id customer: " + id,HttpStatus.NOT_FOUND);
             }
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), null);
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), null);
         }
     }
 
@@ -70,15 +73,15 @@ public class CustomerServiceImpl implements CustomerService {
             UUID uuid = ConvertStringToUUID.getUUID(id);
             Optional<Customer> existingCustomer = customerRepository.findById(uuid);
             if (existingCustomer.isPresent()) {
-                Customer updatedCustomerEntity = DataMapper.toEntity(dto, Customer.class);
-                updatedCustomerEntity.setCustomerId(uuid);
+                Customer entity = DataMapper.toEntity(dto, Customer.class);//convert dto to entity
+                entity.setCustomerId(uuid);
                 return new CustomResponse("Customer updated successfully!", HttpStatus.OK.value(),
-                        DataMapper.toDTO(customerRepository.save(updatedCustomerEntity), UpdateCustomerDTO.class));
+                        DataMapper.toDTO(customerRepository.save(entity), UpdateCustomerDTO.class));
             } else {
-                throw new IllegalArgumentException("Update failed! Customer not found: " + id);
+                throw new CustomException("Update failed! Customer not found: " + id,HttpStatus.NOT_FOUND);
             }
-        } catch (IllegalArgumentException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), new UpdateCustomerDTO());
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), new UpdateCustomerDTO());
         }
     }
 
@@ -91,10 +94,10 @@ public class CustomerServiceImpl implements CustomerService {
                 customerRepository.deleteById(uuid);
                 return new CustomResponse("Customer deleted successfully!", HttpStatus.ACCEPTED.value(), "");
             } else {
-                throw new IllegalArgumentException("Customer not found: " + id);
+                throw new CustomException("Customer not found: " + id,HttpStatus.BAD_REQUEST);
             }
-        } catch (RuntimeException e) {
-            return new CustomResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), null);
+        } catch (CustomException e) {
+            return new CustomResponse(e.getMessage(), e.getHttpStatus().value(), null);
         }
     }
 }

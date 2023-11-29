@@ -1,5 +1,6 @@
 package com.example.projectdemogit.auth.jwt;
 
+import com.example.projectdemogit.auth.userdetails.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsernameFromToken(token);
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+            CustomUserDetails userDetails = (CustomUserDetails)customUserDetailsService.loadUserByUsername(username);
+            /*  cung cấp thong tin chio tiết để view ra ở home */
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);

@@ -39,7 +39,7 @@ public class EmailServiceImpl implements EmailService {
 
             Optional<User> existingEmail = userRepository.findByEmail(dto.getEmail());
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
+                throw new CustomException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
             }
             if (!existingEmail.isPresent()) {
                 throw new SendMailException("Your email " + dto.getEmail() + " not found !");
@@ -76,10 +76,10 @@ public class EmailServiceImpl implements EmailService {
         try {
             Optional<User> existingToken = userRepository.findByPasswordResetToken(token);
             if (!existingToken.isPresent()) {
-                throw new ValidFiledException("Param token not found !",HttpStatus.NOT_FOUND);
+                throw new CustomException("Param token not found !",HttpStatus.NOT_FOUND);
             }
             if (result.hasErrors()) {
-                throw new ValidFiledException(ValidationUtils.getValidationErrorString(result),HttpStatus.BAD_REQUEST);
+                throw new CustomException(ValidationUtils.getValidationErrorString(result),HttpStatus.BAD_REQUEST);
             }
             existingToken.get().setPassword(passwordEncoder.encode(dto.getPassword()));
             existingToken.get().setPasswordResetToken(null);

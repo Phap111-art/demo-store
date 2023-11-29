@@ -15,7 +15,7 @@ public class JwtTokenProvider {
     private String SECRET_KEY;
 
     //Thời gian có hiệu lực của chuỗi jwt 1 day
-    private static final long EXPIRATION_TIME = 86400000; // 1 day
+    private static final long EXPIRATION_TIME = 86400000; // 1 day=86400000s
 
     // Tạo ra jwt từ thông tin user
     public String generateToken(CustomUserDetails userDetails) {

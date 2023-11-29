@@ -2,6 +2,11 @@ package com.example.projectdemogit.mapper;
 
 import org.modelmapper.ModelMapper;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class DataMapper {
     private static final ModelMapper modelMapper = new ModelMapper();
 
@@ -11,5 +16,12 @@ public class DataMapper {
 
     public static <T> T toDTO(Object object, Class<T> dtoClass) {
         return modelMapper.map(object, dtoClass);
+    }
+    public static <T> List<T> toDTOList(List<?> objects, Class<T> dtoClass) {
+        ModelMapper modelMapper = new ModelMapper();
+
+        return objects.stream()
+                .map(object -> modelMapper.map(object, dtoClass))
+                .collect(Collectors.toList());
     }
 }

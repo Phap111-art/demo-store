@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
         try {
             CustomUserDetails userDetails = (CustomUserDetails) detailsService.loadUserByUsername(dto.getUsername());
             if (!passwordEncoder.matches(dto.getPassword(), userDetails.getPassword())) {
-                throw new InvalidException("Invalid username or password", HttpStatus.UNAUTHORIZED);
+                throw new CustomException("Invalid username or password", HttpStatus.UNAUTHORIZED);
             }
             if (result.hasErrors()) {
                 throw new CustomException(ValidationUtils.getValidationErrorString(result), HttpStatus.BAD_REQUEST);
@@ -174,7 +174,8 @@ public class UserServiceImpl implements UserService {
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
             String username = authentication.getName(); // Lấy tên người dùng từ xác thực
             List<String> roles = AuthenticationUtils.getRoles(customUserDetails);
-            return new CustomResponse("Login ok Successfully", HttpStatus.OK.value(), "username : " + username + " - " + roles);
+            return new CustomResponse("Login ok Successfully", HttpStatus.OK.value(), "username : " + username
+                    + " - " + roles);
         }
         return new CustomResponse("UNAUTHORIZED", HttpStatus.UNAUTHORIZED.value(), null);
     }

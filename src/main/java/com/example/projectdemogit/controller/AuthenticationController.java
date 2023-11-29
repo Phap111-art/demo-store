@@ -60,7 +60,7 @@ public class AuthenticationController {
     public ResponseEntity<CustomResponse> home(Authentication authentication , @AuthenticationPrincipal CustomOidcUser customOidcUser) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getUserInfoAfterAuthentication(authentication,customOidcUser));
     }
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     public ResponseEntity<String> logout() {
         return ResponseEntity.ok("/login");
     }

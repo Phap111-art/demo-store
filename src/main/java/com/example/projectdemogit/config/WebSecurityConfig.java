@@ -44,13 +44,14 @@ public class WebSecurityConfig {
         return new JwtAuthenticationFilter();
     }
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public UserDetailsService detailsService() {
+    public CustomUserDetailsService detailsService() {
         return new CustomUserDetailsService();
     }
 
@@ -69,6 +70,7 @@ public class WebSecurityConfig {
         return new JwtSessionStorageLogoutHandler();
     }
 
+    /* Cung dich vụ*/
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
@@ -90,17 +92,21 @@ public class WebSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(UserAccessUrls[0], UserAccessUrls[1], UserAccessUrls[2], UserAccessUrls[3]).permitAll()
+                        //cho phep access tai nguyen
+                        .requestMatchers(UserAccessUrls[0], UserAccessUrls[1], UserAccessUrls[2], UserAccessUrls[3] , "/customers/**").permitAll()
+                        //phai dung role moi truy cap tai nguyen
                         .requestMatchers(authorityToAccessUrls[0]).hasAuthority(RoleType.USER.name())
                         .requestMatchers(authorityToAccessUrls[1]).hasAuthority(RoleType.ADMIN.name())
                         .requestMatchers(authorityToAccessUrls[2]).hasAuthority(RoleType.WAREHOUSE_MANAGER.name())
                         .requestMatchers(authorityToAccessUrls[3]).hasAuthority(RoleType.SELLER.name())
                         .requestMatchers(authorityToAccessUrls[4]).hasAuthority(RoleType.CUSTOMER_VIP.name())
-                        .anyRequest().authenticated()
-                ).exceptionHandling(config -> config.accessDeniedHandler(accessDeniedHandler()))
+                        .anyRequest().authenticated() /* bất kì mọi request còn lại phải thông qua xác thực auth */
+                ).exceptionHandling(config -> config.accessDeniedHandler(accessDeniedHandler()))// khong dung role bi access deny
+                //xac thuc login co ban
                 .formLogin(formLogin -> formLogin
                         .defaultSuccessUrl(successUrls)
                 ).httpBasic(Customizer.withDefaults())
+                //logout session
                 .logout(logout -> logout
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
@@ -110,6 +116,7 @@ public class WebSecurityConfig {
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
+                //xac thuc bang oauth2(google...)
                 .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl(successUrls)
                         .userInfoEndpoint(info -> info
@@ -117,6 +124,7 @@ public class WebSecurityConfig {
                         )
 
                 )
+                //ưu tiên xác thực jwt trước
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
